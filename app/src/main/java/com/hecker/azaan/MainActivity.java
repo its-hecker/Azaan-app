@@ -224,10 +224,10 @@ public final class MainActivity extends Activity {
             LinearLayout card = card(body);
             label(card, line.repetitions + " TIMES" + (line.optional ? "  ·  OPTIONAL TESTIMONY" : "")); gap(card, 12);
             TextView arabic = text(line.arabic, 29, TEXT);
-            arabic.setGravity(Gravity.RIGHT); arabic.setTextDirection(View.TEXT_DIRECTION_RTL);
+            arabic.setLayoutDirection(View.LAYOUT_DIRECTION_RTL); arabic.setGravity(Gravity.START); arabic.setTextDirection(View.TEXT_DIRECTION_RTL);
             card.addView(arabic); gap(card, 10);
             TextView urdu = text(line.urdu, 21, GOLD);
-            urdu.setGravity(Gravity.RIGHT); urdu.setTextDirection(View.TEXT_DIRECTION_RTL); urdu.setLineSpacing(dp(7), 1);
+            urdu.setLayoutDirection(View.LAYOUT_DIRECTION_RTL); urdu.setGravity(Gravity.START); urdu.setTextDirection(View.TEXT_DIRECTION_RTL); urdu.setLineSpacing(dp(7), 1);
             card.addView(urdu); gap(card, 12);
             card.addView(text(line.transliteration, 13, MUTED)); gap(card, 8);
             card.addView(text(line.english, 16, TEXT));
@@ -609,7 +609,13 @@ public final class MainActivity extends Activity {
 
     private final class HorizonView extends View {
         private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Path arch = new Path();
+        private Shader fade;
         HorizonView() { super(MainActivity.this); setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO); }
+        @Override protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            super.onSizeChanged(w, h, oldw, oldh);
+            if (h > 0) fade = new LinearGradient(0, h * 0.70f, 0, h, Color.TRANSPARENT, Color.rgb(27,59,48), Shader.TileMode.CLAMP);
+        }
         @Override protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
             float w = getWidth(), h = getHeight(), cx = w / 2;
@@ -619,12 +625,12 @@ public final class MainActivity extends Activity {
             paint.setStyle(Paint.Style.FILL); paint.setColor(GOLD);
             canvas.drawCircle(cx, h * 0.43f, h * 0.15f, paint);
             paint.setColor(Color.rgb(27,59,48)); canvas.drawCircle(cx + h * 0.07f, h * 0.37f, h * 0.15f, paint);
-            paint.setShader(new LinearGradient(0, h * 0.70f, 0, h, Color.TRANSPARENT, Color.rgb(27,59,48), Shader.TileMode.CLAMP));
+            paint.setShader(fade);
             canvas.drawRect(0, h * 0.70f, w, h, paint); paint.setShader(null);
             paint.setColor(GOLD); canvas.drawCircle(cx + h * 0.24f, h * 0.27f, dp(2), paint);
             paint.setColor(Color.argb(160,217,187,119)); canvas.drawCircle(cx - h * 0.34f, h * 0.52f, dp(1.5f), paint);
             paint.setStyle(Paint.Style.STROKE); paint.setStrokeWidth(dp(1.2f));
-            Path arch = new Path(); arch.moveTo(cx - h * 0.25f, h);
+            arch.reset(); arch.moveTo(cx - h * 0.25f, h);
             arch.lineTo(cx - h * 0.25f, h * 0.82f); arch.quadTo(cx - h * 0.25f, h * 0.65f, cx, h * 0.57f);
             arch.quadTo(cx + h * 0.25f, h * 0.65f, cx + h * 0.25f, h * 0.82f); arch.lineTo(cx + h * 0.25f, h);
             canvas.drawPath(arch, paint);

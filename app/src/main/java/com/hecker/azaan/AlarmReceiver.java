@@ -1,11 +1,13 @@
 package com.hecker.azaan;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import java.time.Instant;
 
 public final class AlarmReceiver extends BroadcastReceiver {
+    @SuppressLint("ApplySharedPref") // Persist deduplication before handing playback to another component.
     @Override public void onReceive(Context context, Intent intent) {
         AppSettings s = new AppSettings(context);
         Prayer prayer;
