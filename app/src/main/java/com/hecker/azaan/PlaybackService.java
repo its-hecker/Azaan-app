@@ -56,6 +56,7 @@ public final class PlaybackService extends Service {
         Notifications.channels(this);
         startForeground(Notifications.PLAYBACK_ID, Notifications.playback(this, title, "Preparing Arabic → Urdu → English"));
         running = true;
+        ready = false;
         languages = settings.languages();
         languageIndex = 0; phraseIndex = 0;
         audio = getSystemService(AudioManager.class);
@@ -74,6 +75,9 @@ public final class PlaybackService extends Service {
         } else {
             int token = ++generation;
             tts = new TextToSpeech(this, status -> handler.post(() -> initializeSpeech(status, token)));
+            handler.postDelayed(() -> {
+                if (running && !ready) fail("The speech engine did not start. Install offline voices or import recordings in Settings.");
+            }, 15_000);
         }
         return START_NOT_STICKY;
     }

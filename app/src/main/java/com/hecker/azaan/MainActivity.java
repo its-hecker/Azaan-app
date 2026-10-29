@@ -77,6 +77,7 @@ public final class MainActivity extends Activity {
     private AzaanText.Language importLanguage;
     private TextToSpeech checker;
     private int checkGeneration;
+    private Runnable checkTimeout;
     private LocationManager locationManager;
     private LocationListener locationListener;
     private ProgressDialog locationProgress;
@@ -488,6 +489,7 @@ public final class MainActivity extends Activity {
     }
     private void checkAudio(boolean activate) {
         int token = ++checkGeneration;
+        if (checkTimeout != null) handler.removeCallbacks(checkTimeout);
         if (checker != null) { checker.shutdown(); checker = null; }
         List<AzaanText.Language> languages = settings.languages();
         boolean needSpeech = false;
@@ -501,6 +503,7 @@ public final class MainActivity extends Activity {
         settings.status("Checking installed offline voices…");
         checker = new TextToSpeech(this, status -> handler.post(() -> {
             if (destroyed || checker == null || token != checkGeneration) return;
+            if (checkTimeout != null) handler.removeCallbacks(checkTimeout);
             String error = status == TextToSpeech.SUCCESS ? null : "Install a speech engine or import recordings in Settings.";
             if (error == null) for (AzaanText.Language language : languages) {
                 if (settings.recording(language).isEmpty() && VoiceSupport.offline(checker, language) == null) {
@@ -509,6 +512,13 @@ public final class MainActivity extends Activity {
             }
             checker.shutdown(); checker = null; audioResult(activate, error);
         }));
+        checkTimeout = () -> {
+            if (!destroyed && checker != null && token == checkGeneration) {
+                ++checkGeneration; checker.shutdown(); checker = null;
+                audioResult(activate, "The speech engine did not respond. Open speech voice settings or import recordings.");
+            }
+        };
+        handler.postDelayed(checkTimeout, 15_000);
     }
     private void audioResult(boolean activate, String error) {
         if (error != null) {
