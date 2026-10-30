@@ -1,0 +1,47 @@
+name: Check recitation source
+on:
+  push:
+    branches: [feat/male-reciter-countdown]
+    paths: ['.github/workflows/recitation-check.yml']
+permissions:
+  contents: read
+jobs:
+  audio:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Retrieve recitation and source metadata
+        run: |
+          mkdir audio-check
+          python3 - <<'PY'
+          import urllib.request, pathlib, re, json, hashlib
+          out = pathlib.Path("audio-check")
+          urls = [
+            "https://www.shiasource.com/wp-content/uploads/2018/07/adhan_alhalawaji.mp3",
+            "https://shiasource.com/wp-content/uploads/2018/07/adhan_alhalawaji.mp3",
+            "https://shiavoice.com/play-EhBAk"
+          ]
+          for i, url in enumerate(urls):
+            try:
+              req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+              with urllib.request.urlopen(req, timeout=30) as r:
+                data = r.read(20 * 1024 * 1024)
+                kind = r.headers.get("Content-Type", "")
+              print(url, kind, len(data), flush=True)
+              if "audio" in kind or (url.endswith(".mp3") and not data.lstrip().startswith(b"<")):
+                p = out / ("recitation_" + str(i) + ".mp3")
+                p.write_bytes(data)
+                print("SHA256", hashlib.sha256(data).hexdigest(), flush=True)
+              else:
+                text = data.decode(errors="replace")
+                (out / ("page_" + str(i) + ".html")).write_text(text)
+                for match in re.findall(r'.{0,120}(?:\\.mp3|audioUrl|audio_url|data-src|download).{0,220}', text, re.I):
+                  print(match[:400], flush=True)
+            except Exception as e:
+              print(url, type(e).__name__, str(e), flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: recitation-source
+          path: audio-check/
+          if-no-files-found: error
