@@ -16,11 +16,7 @@ jobs:
           python3 - <<'PY'
           import urllib.request, pathlib, re, json, hashlib
           out = pathlib.Path("audio-check")
-          urls = [
-            "https://www.shiasource.com/wp-content/uploads/2018/07/adhan_alhalawaji.mp3",
-            "https://shiasource.com/wp-content/uploads/2018/07/adhan_alhalawaji.mp3",
-            "https://shiavoice.com/play-EhBAk"
-          ]
+          urls = ["https://shiavoice.com/stream-EhBAk"]
           for i, url in enumerate(urls):
             try:
               req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
